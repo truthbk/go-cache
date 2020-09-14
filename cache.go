@@ -179,6 +179,25 @@ func (c *cache) get(k string) (interface{}, bool) {
 	return item.Object, true
 }
 
+// Touch replaces the expiry of a key and returns the current value.
+func (c *cache) Touch(k string, d time.Duration) (interface{}, bool) {
+	if d == DefaultExpiration {
+		d = c.defaultExpiration
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	item, ok := c.items[k]
+	if !ok {
+		return nil, false
+	}
+
+	item.Expiration = time.Now().Add(d).UnixNano()
+	c.items[k] = item
+	return item.Object, true
+}
+
 // Increment an item of type int, int8, int16, int32, int64, uintptr, uint,
 // uint8, uint32, or uint64, float32 or float64 by n. Returns an error if the
 // item's value is not an integer, if it was not found, or if it is not
